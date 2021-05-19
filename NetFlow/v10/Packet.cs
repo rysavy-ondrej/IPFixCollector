@@ -11,9 +11,9 @@ namespace IPFixCollector.Modules.Netflow.v10
         public V10Header Header { get; private set; }
         public List<FlowSet> FlowSet { get; private set; }
 
-        public V10Packet(byte[] bytes, TemplatesV10 templates)
+        public V10Packet(Span<byte> bytes, TemplatesV10 templates)
         {
-            _bytes = bytes;
+            _bytes = bytes.ToArray();
             Parse(templates);
         }
 

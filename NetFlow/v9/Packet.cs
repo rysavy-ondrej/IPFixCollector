@@ -27,9 +27,9 @@ namespace IPFixCollector.Modules.Netflow.v9
             }
         }
 
-        public V9Packet(Byte[] bytes, TemplatesV9 templates)
+        public V9Packet(Span<byte> bytes, TemplatesV9 templates)
         {
-            this._bytes = bytes;
+            this._bytes = bytes.ToArray();
             this.Parse(templates);
         }
 

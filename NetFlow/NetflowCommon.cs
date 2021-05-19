@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,14 +9,11 @@ namespace IPFixCollector.Modules.Netflow
 {
     class NetflowCommon
     {
-        public ushort _version;
-        private byte[] _bytes;
-
-        public NetflowCommon(byte[] bytes)
+        public NetflowCommon(Span<byte> bytes)
         {
-            _bytes = bytes;
-            byte[] reverse = _bytes.Reverse().ToArray();
-            _version = BitConverter.ToUInt16(reverse, _bytes.Length - sizeof(short) - 0);
+            Version = BinaryPrimitives.ReadUInt16BigEndian(bytes);
         }
+
+        public ushort Version { get; private set; }
     }
 }

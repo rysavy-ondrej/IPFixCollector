@@ -53,9 +53,9 @@ namespace IPFixCollector.Modules.Netflow.V5
 
         public V5Header Header { get { return this._header; } }
 
-        public PacketV5(Byte[] bytes)
+        public PacketV5(Span<byte> bytes)
         {
-            this._bytes = bytes;
+            this._bytes = bytes.ToArray();
 
             Int32 length = _bytes.Length - 48;
 
