@@ -96,24 +96,24 @@ namespace IPFixCollector.Modules.Netflow.v9
                 foreach (Template templ in flows.Template)
                 {
                     ret += i + "\tTemplate:" + "\r\n"
-                        + "\tID: " + templ.ID + "\r\n"
-                        + "\tCount: " + templ.Count + "\r\n";
-                    foreach (Field fields in templ.Field)
+                        + "\tID: " + templ.TemplateId + "\r\n"
+                        + "\tCount: " + templ.FieldsCount + "\r\n";
+                    foreach (Field fields in templ.Fields)
                     {
                         ret += "\t\t" + fields.Type + ": ";
 
                         if (fields.Value.Count == 0) ret += "\r\n";
 
-                        if ((fields.GetTypes() == (UInt16)FieldType.IPV4_DST_ADDR) ||
-                            (fields.GetTypes() == (UInt16)FieldType.IPV4_SRC_ADDR) ||
-                            (fields.GetTypes() == (UInt16)FieldType.IPV4_NEXT_HOP) ||
-                            (fields.GetTypes() == (UInt16)FieldType.IPV6_DST_ADDR) ||
-                            (fields.GetTypes() == (UInt16)FieldType.IPV6_SRC_ADDR) ||
-                            (fields.GetTypes() == (UInt16)FieldType.IPV6_NEXT_HOP))
+                        if ((fields.GetFieldType() == (UInt16)FieldType.destinationIPv4Address) ||
+                            (fields.GetFieldType() == (UInt16)FieldType.sourceIPv4Address) ||
+                            (fields.GetFieldType() == (UInt16)FieldType.ipNextHopIPv4Address) ||
+                            (fields.GetFieldType() == (UInt16)FieldType.destinationIPv6Address) ||
+                            (fields.GetFieldType() == (UInt16)FieldType.sourceIPv6Address) ||
+                            (fields.GetFieldType() == (UInt16)FieldType.ipNextHopIPv6Address))
                         {
                             if (fields.Value.Count != 0) ret += new IPAddress(fields.Value.ToArray()).ToString();
                         }
-                        else if ((fields.GetTypes() == (UInt16)FieldType.L4_DST_PORT) || (fields.GetTypes() == (UInt16)FieldType.L4_SRC_PORT))
+                        else if ((fields.GetFieldType() == (UInt16)FieldType.destinationTransportPort) || (fields.GetFieldType() == (UInt16)FieldType.sourceTransportPort))
                         {
                             if (fields.Value.Count != 0) ret += BitConverter.ToUInt16(fields.Value.ToArray().Reverse().ToArray(), 0);
                         }

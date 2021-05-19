@@ -2,46 +2,46 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Buffers.Binary;
 
 namespace IPFixCollector.Modules.Netflow.v9
 {
     [Serializable]
 	public class Template
 	{
-		private UInt16 _id;
-		private UInt16 _count;
-		private List<Field> _field;
+		private UInt16 _templateId;
+		private UInt16 _fieldsCount;
+		private List<Field> _fields;
+        private byte[] _bytes;
 
-        private Byte[] _bytes;
-
-		public UInt16 ID
+		public UInt16 TemplateId
 		{
 			get
 			{
-                return this._id;
+                return this._templateId;
 			}
 		}
-		public UInt16 Count
+		public UInt16 FieldsCount
 		{
 			get
 			{
-                return this._count;
+                return this._fieldsCount;
 			}
 		}
-		public List<Field> Field
+		public List<Field> Fields
 		{
 			get
 			{
-                return this._field;
+                return this._fields;
 			}
 		}
 
-        public UInt16 FieldLength
+        public UInt16 AllFieldsLength
         {
             get
             {
                 UInt16 len = 0;
-                foreach (Field fields in this._field)
+                foreach (Field fields in this._fields)
                 {
                     len += fields.Length;
                 }
@@ -49,28 +49,24 @@ namespace IPFixCollector.Modules.Netflow.v9
             }
         }
 
-        public Template(Byte[] bytes)
+        public Template(Span<byte> bytes)
         {
-            this._bytes = bytes;
+            this._bytes = bytes.ToArray();
             this.Parse();
         }
 
         private void Parse()
         {
-            byte[] reverse = this._bytes.Reverse().ToArray();
-            this._field = new List<Field>();
+            this._fields = new List<Field>();
+            this._templateId = BinaryPrimitives.ReadUInt16BigEndian(_bytes);
+            this._fieldsCount = BinaryPrimitives.ReadUInt16BigEndian(new ReadOnlySpan<byte>(_bytes, 2, 2));
 
-            this._id = BitConverter.ToUInt16(reverse, this._bytes.Length - sizeof(Int16) - 0);
-            this._count = BitConverter.ToUInt16(reverse, this._bytes.Length - sizeof(Int16) - 2);
-
-            if (this._bytes.Length == ((this._count*4)+4))
+            if (this._bytes.Length == ((this._fieldsCount*4)+4))
             {
-                for (int i = 0, j=4; i < this._count; i++, j+=4 )
+                for (int i = 0, j=4; i < this._fieldsCount; i++, j+=4 )
                 {                    
-                    Byte[] bfield = new Byte[4];
-                    Array.Copy(this._bytes, j, bfield, 0, 4);
-                    Field field = new Field(bfield);
-                    this._field.Add(field);
+                    var field = new Field(new Span<byte>(this._bytes, j, 4));
+                    this._fields.Add(field);
                 }
             }
         }

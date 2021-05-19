@@ -12,9 +12,9 @@ namespace IPFixCollector.Modules.Netflow.v9
         private UInt16 _id;
         private UInt16 _length;
         private SynchronizedCollection<Template> _template;
-        private List<Byte> _valuebyte;
+        private List<Byte> _valueBytes;
 
-        private Byte[] _bytes;
+        private Byte[] _rawBytes;
 
         public UInt16 ID
         {
@@ -42,24 +42,24 @@ namespace IPFixCollector.Modules.Netflow.v9
         {
             get
             {
-                return this._valuebyte;
+                return this._valueBytes;
             }
         }
 
         public FlowSet(Byte[] bytes, TemplatesV9 templates)
         {
-            this._bytes = bytes;
+            this._rawBytes = bytes;
             this.Parse(templates);
         }
 
         private void Parse(TemplatesV9 templates)
         {
-            byte[] reverse = this._bytes.Reverse().ToArray();
+            byte[] reverse = this._rawBytes.Reverse().ToArray();
             this._template = new SynchronizedCollection<Template>();
-            this._valuebyte = new List<byte>();
+            this._valueBytes = new List<byte>();
 
-            this._id = BitConverter.ToUInt16(reverse, this._bytes.Length - sizeof(Int16) - 0);
-            this._length = BitConverter.ToUInt16(reverse, this._bytes.Length - sizeof(Int16) - 2);
+            this._id = BitConverter.ToUInt16(reverse, this._rawBytes.Length - sizeof(Int16) - 0);
+            this._length = BitConverter.ToUInt16(reverse, this._rawBytes.Length - sizeof(Int16) - 2);
 
             if ((this._id == 0) || (this._id == 1))
             {
@@ -67,13 +67,13 @@ namespace IPFixCollector.Modules.Netflow.v9
                 {
                     int cout, pastaddress, address = 6;
 
-                    while (address < this._bytes.Length)
+                    while (address < this._rawBytes.Length)
                     {
-                        cout = BitConverter.ToUInt16(reverse, this._bytes.Length - sizeof(Int16) - address);
+                        cout = BitConverter.ToUInt16(reverse, this._rawBytes.Length - sizeof(Int16) - address);
 
                         int length = cout * 4 + 4;
                         Byte[] btemplate = new Byte[length];
-                        Array.Copy(this._bytes, address - 2, btemplate, 0, length);
+                        Array.Copy(this._rawBytes, address - 2, btemplate, 0, length);
 
                         Template template = new Template(btemplate);
 
@@ -84,7 +84,7 @@ namespace IPFixCollector.Modules.Netflow.v9
 
                         for (int i = 0; i < templs.Count; i++)
                         {
-                            if (template.ID == templs[i].ID)
+                            if (template.TemplateId == templs[i].TemplateId)
                             {
                                 flag = true;
                                 templs[i] = template;
@@ -112,7 +112,7 @@ namespace IPFixCollector.Modules.Netflow.v9
 
                 foreach (Template templ in templates.Templates)
                 {
-                    if (templ.ID == this._id)
+                    if (templ.TemplateId == this._id)
                     {
                         templs = DeepClone(templ) as Template;
                         flag = true;
@@ -124,21 +124,21 @@ namespace IPFixCollector.Modules.Netflow.v9
                 if (flag)
                 {
 
-                    z = (this._length - 4) / templs.FieldLength;
+                    z = (this._length - 4) / templs.AllFieldsLength;
 
                     for (int y = 0; y < z; y++)
                     {
-                        foreach (Field fields in templs.Field)
+                        foreach (Field fields in templs.Fields)
                         {
                             for (int i = 0; i < fields.Length; i++, j++)
                             {
-                                fields.Value.Add(this._bytes[j]);
+                                fields.Value.Add(this._rawBytes[j]);
                             }
                         }
 
                         this._template.Add(DeepClone(templs) as Template);
 
-                        foreach (Field filds in templs.Field)
+                        foreach (Field filds in templs.Fields)
                         {
                             filds.Value.Clear();
                         }
@@ -147,9 +147,9 @@ namespace IPFixCollector.Modules.Netflow.v9
 
                 if (!flag)
                 {
-                    for (int i = 4; i < this._bytes.Length; i++)
+                    for (int i = 4; i < this._rawBytes.Length; i++)
                     {
-                        this._valuebyte.Add(this._bytes[i]);
+                        this._valueBytes.Add(this._rawBytes[i]);
                     }
                 }
             }
